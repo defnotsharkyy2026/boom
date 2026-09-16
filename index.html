@@ -1,228 +1,435 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gyroscope Test</title>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width,
+             initial-scale=1,
+             viewport-fit=cover,
+             user-scalable=no"
+>
+
+<title>PenguinMod Gyro</title>
 
 <style>
-    * {
-        box-sizing: border-box;
-    }
 
-    body {
-        margin: 0;
-        min-height: 100vh;
-        background: #111;
-        color: white;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+html,
+body {
+    margin: 0;
+    padding: 0;
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    width: 100%;
+    height: 100%;
 
-        padding: 20px;
-    }
+    overflow: hidden;
 
-    .card {
-        width: 100%;
-        max-width: 420px;
-        background: #1c1c1e;
-        border-radius: 24px;
-        padding: 25px;
-        box-shadow: 0 15px 50px rgba(0,0,0,.4);
-    }
+    background: black;
+}
 
-    h1 {
-        margin-top: 0;
-        font-size: 27px;
-    }
+#project {
+    position: fixed;
 
-    button {
-        width: 100%;
-        border: 0;
-        border-radius: 15px;
-        padding: 15px;
+    left: 0;
+    top: 0;
 
-        background: #5865f2;
-        color: white;
+    width: 100vw;
+    height: 100vh;
 
-        font-size: 17px;
-        font-weight: 600;
+    border: 0;
+}
 
-        margin-bottom: 20px;
-    }
+#gyroUI {
+    position: fixed;
 
-    .status {
-        padding: 12px;
-        border-radius: 12px;
-        background: #2c2c2e;
-        margin-bottom: 20px;
-    }
+    left: 0;
+    top: 0;
 
-    .value {
-        display: flex;
-        justify-content: space-between;
+    width: 100vw;
+    height: 100vh;
 
-        padding: 12px 0;
+    display: flex;
 
-        border-bottom: 1px solid #38383a;
+    align-items: center;
+    justify-content: center;
 
-        font-size: 17px;
-    }
+    background: rgba(0, 0, 0, 0.4);
 
-    .number {
-        font-family: monospace;
-        font-size: 18px;
-    }
+    z-index: 999999;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        Arial,
+        sans-serif;
+}
+
+#gyroBox {
+    width: min(340px, 82vw);
+
+    padding: 25px;
+
+    border-radius: 24px;
+
+    background: rgba(28, 28, 30, 0.97);
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5);
+
+    text-align: center;
+}
+
+#gyroTitle {
+    color: white;
+
+    font-size: 24px;
+
+    font-weight: 700;
+
+    margin-bottom: 10px;
+}
+
+#gyroDescription {
+    color: rgba(255,255,255,0.7);
+
+    font-size: 14px;
+
+    line-height: 20px;
+
+    margin-bottom: 20px;
+}
+
+#enableGyro {
+    width: 100%;
+
+    padding: 15px;
+
+    border: 0;
+
+    border-radius: 15px;
+
+    background: #5865F2;
+
+    color: white;
+
+    font-size: 17px;
+
+    font-weight: 600;
+
+    -webkit-appearance: none;
+
+    touch-action: manipulation;
+}
+
+#gyroStatus {
+    margin-top: 15px;
+
+    color: rgba(255,255,255,0.7);
+
+    font-size: 13px;
+}
+
 </style>
+
 </head>
 
 <body>
 
-<div class="card">
+<!--
+    YOUR PENGUINMOD PROJECT
+-->
+<iframe
+    id="project"
+    src="defnotsharkyy2026.github.io/boom/Project.html"
+    allow="accelerometer; gyroscope; magnetometer"
+></iframe>
 
-    <h1>Gyroscope Test</h1>
 
-    <button id="enable">
-        Enable Gyroscope
-    </button>
+<div id="gyroUI">
 
-    <div class="status" id="status">
-        Permission: not requested
-    </div>
+    <div id="gyroBox">
 
-    <div class="value">
-        <span>Alpha</span>
-        <span class="number" id="alpha">0</span>
-    </div>
+        <div id="gyroTitle">
+            Gyroscope
+        </div>
 
-    <div class="value">
-        <span>Beta</span>
-        <span class="number" id="beta">0</span>
-    </div>
+        <div id="gyroDescription">
+            Allow motion sensors to use
+            your iPhone's tilt controls.
+        </div>
 
-    <div class="value">
-        <span>Gamma</span>
-        <span class="number" id="gamma">0</span>
+        <button id="enableGyro">
+            Enable Gyroscope
+        </button>
+
+        <div id="gyroStatus">
+            Waiting for permission...
+        </div>
+
     </div>
 
 </div>
 
+
 <script>
 
-const enableButton = document.getElementById("enable");
+const project =
+    document.getElementById("project");
 
-const status = document.getElementById("status");
+const ui =
+    document.getElementById("gyroUI");
 
-const alpha = document.getElementById("alpha");
-const beta = document.getElementById("beta");
-const gamma = document.getElementById("gamma");
+const button =
+    document.getElementById("enableGyro");
 
+const status =
+    document.getElementById("gyroStatus");
+
+
+let enabled = false;
 let receiving = false;
 
-function updateStatus(text) {
-    status.textContent = text;
-}
 
-function orientation(event) {
+/*
+ * Send data into PenguinMod.
+ */
+function sendGyro(
+    alpha,
+    beta,
+    gamma,
+    absolute
+) {
 
     receiving = true;
 
-    alpha.textContent =
-        event.alpha === null
-            ? "null"
-            : event.alpha.toFixed(2) + "°";
+    project.contentWindow.postMessage(
+        {
+            type: "PENGUINMOD_GYRO",
 
-    beta.textContent =
-        event.beta === null
-            ? "null"
-            : event.beta.toFixed(2) + "°";
+            alpha: Number(alpha) || 0,
 
-    gamma.textContent =
-        event.gamma === null
-            ? "null"
-            : event.gamma.toFixed(2) + "°";
+            beta: Number(beta) || 0,
 
-    updateStatus(
-        "● Receiving gyroscope data"
+            gamma: Number(gamma) || 0,
+
+            absolute: !!absolute,
+
+            enabled: true,
+
+            receiving: true,
+
+            permission: "granted"
+        },
+
+        "*"
     );
 }
 
-enableButton.addEventListener("click", async () => {
+
+/*
+ * iPhone orientation event.
+ */
+function orientationHandler(event) {
+
+    sendGyro(
+        event.alpha,
+        event.beta,
+        event.gamma,
+        event.absolute
+    );
+
+}
+
+
+/*
+ * Start listening.
+ */
+function startGyroscope() {
+
+    window.addEventListener(
+        "deviceorientation",
+        orientationHandler,
+        true
+    );
+
+    enabled = true;
+
+    status.textContent =
+        "Gyroscope enabled ✓";
+
+    button.textContent =
+        "Enabled ✓";
+
+    button.disabled = true;
+
+    setTimeout(() => {
+
+        ui.style.display = "none";
+
+    }, 700);
+
+}
+
+
+/*
+ * Ask iPhone for permission.
+ *
+ * THIS CODE IS RUN BY THE TOP-LEVEL PAGE.
+ */
+async function requestGyroscopePermission() {
 
     try {
 
         if (!window.isSecureContext) {
-            updateStatus(
-                "ERROR: This page must use HTTPS."
-            );
+
+            status.textContent =
+                "ERROR: HTTPS is required.";
+
             return;
+
         }
+
 
         if (
             typeof DeviceOrientationEvent ===
             "undefined"
         ) {
-            updateStatus(
-                "ERROR: Device orientation is not supported."
-            );
+
+            status.textContent =
+                "ERROR: Device orientation unavailable.";
+
             return;
+
         }
+
 
         /*
          * iOS Safari
          */
         if (
             typeof DeviceOrientationEvent
-                .requestPermission === "function"
+                .requestPermission ===
+            "function"
         ) {
 
-            updateStatus(
-                "Requesting permission..."
-            );
+            status.textContent =
+                "Requesting permission...";
+
 
             const permission =
                 await DeviceOrientationEvent
                     .requestPermission();
 
+
             if (permission !== "granted") {
 
-                updateStatus(
-                    "Permission: " + permission
-                );
+                status.textContent =
+                    "Permission: " + permission;
 
                 return;
+
             }
+
         }
 
-        window.addEventListener(
-            "deviceorientation",
-            orientation,
-            true
-        );
 
-        updateStatus(
-            "Permission granted. Waiting for sensor..."
-        );
-
-        enableButton.textContent =
-            "Gyroscope Enabled";
-
-        enableButton.disabled = true;
+        startGyroscope();
 
     } catch (error) {
 
-        console.error(error);
-
-        updateStatus(
-            "ERROR: " + error.message
+        console.error(
+            "Gyroscope error:",
+            error
         );
+
+        status.textContent =
+            "ERROR: " + error.message;
 
     }
 
-});
+}
+
+
+/*
+ * REAL iPhone tap.
+ *
+ * This is what fixes the permission problem.
+ */
+button.addEventListener(
+    "click",
+    requestGyroscopePermission
+);
+
+
+/*
+ * Allow PenguinMod to request the UI.
+ */
+window.addEventListener(
+    "message",
+    event => {
+
+        if (
+            !event.data ||
+            event.data.type !==
+                "PENGUINMOD_GYRO_REQUEST"
+        ) {
+            return;
+        }
+
+        /*
+         * We cannot automatically call the iOS
+         * permission API here because this isn't
+         * the original button gesture anymore.
+         *
+         * Instead, show our real button.
+         */
+        ui.style.display = "flex";
+
+    }
+);
+
+
+/*
+ * If the PenguinMod iframe reloads,
+ * send its current sensor state again.
+ */
+project.addEventListener(
+    "load",
+    () => {
+
+        if (!enabled) {
+            return;
+        }
+
+        project.contentWindow.postMessage(
+            {
+                type: "PENGUINMOD_GYRO",
+
+                alpha: 0,
+                beta: 0,
+                gamma: 0,
+
+                absolute: false,
+
+                enabled: true,
+
+                receiving: receiving,
+
+                permission: "granted"
+            },
+
+            "*"
+        );
+
+    }
+);
 
 </script>
 
 </body>
+
 </html>
