@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gyroscope Test</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: #111;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 20px;
+    }
+
+    .card {
+        width: 100%;
+        max-width: 420px;
+        background: #1c1c1e;
+        border-radius: 24px;
+        padding: 25px;
+        box-shadow: 0 15px 50px rgba(0,0,0,.4);
+    }
+
+    h1 {
+        margin-top: 0;
+        font-size: 27px;
+    }
+
+    button {
+        width: 100%;
+        border: 0;
+        border-radius: 15px;
+        padding: 15px;
+
+        background: #5865f2;
+        color: white;
+
+        font-size: 17px;
+        font-weight: 600;
+
+        margin-bottom: 20px;
+    }
+
+    .status {
+        padding: 12px;
+        border-radius: 12px;
+        background: #2c2c2e;
+        margin-bottom: 20px;
+    }
+
+    .value {
+        display: flex;
+        justify-content: space-between;
+
+        padding: 12px 0;
+
+        border-bottom: 1px solid #38383a;
+
+        font-size: 17px;
+    }
+
+    .number {
+        font-family: monospace;
+        font-size: 18px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h1>Gyroscope Test</h1>
+
+    <button id="enable">
+        Enable Gyroscope
+    </button>
+
+    <div class="status" id="status">
+        Permission: not requested
+    </div>
+
+    <div class="value">
+        <span>Alpha</span>
+        <span class="number" id="alpha">0</span>
+    </div>
+
+    <div class="value">
+        <span>Beta</span>
+        <span class="number" id="beta">0</span>
+    </div>
+
+    <div class="value">
+        <span>Gamma</span>
+        <span class="number" id="gamma">0</span>
+    </div>
+
+</div>
+
+<script>
+
+const enableButton = document.getElementById("enable");
+
+const status = document.getElementById("status");
+
+const alpha = document.getElementById("alpha");
+const beta = document.getElementById("beta");
+const gamma = document.getElementById("gamma");
+
+let receiving = false;
+
+function updateStatus(text) {
+    status.textContent = text;
+}
+
+function orientation(event) {
+
+    receiving = true;
+
+    alpha.textContent =
+        event.alpha === null
+            ? "null"
+            : event.alpha.toFixed(2) + "°";
+
+    beta.textContent =
+        event.beta === null
+            ? "null"
+            : event.beta.toFixed(2) + "°";
+
+    gamma.textContent =
+        event.gamma === null
+            ? "null"
+            : event.gamma.toFixed(2) + "°";
+
+    updateStatus(
+        "● Receiving gyroscope data"
+    );
+}
+
+enableButton.addEventListener("click", async () => {
+
+    try {
+
+        if (!window.isSecureContext) {
+            updateStatus(
+                "ERROR: This page must use HTTPS."
+            );
+            return;
+        }
+
+        if (
+            typeof DeviceOrientationEvent ===
+            "undefined"
+        ) {
+            updateStatus(
+                "ERROR: Device orientation is not supported."
+            );
+            return;
+        }
+
+        /*
+         * iOS Safari
+         */
+        if (
+            typeof DeviceOrientationEvent
+                .requestPermission === "function"
+        ) {
+
+            updateStatus(
+                "Requesting permission..."
+            );
+
+            const permission =
+                await DeviceOrientationEvent
+                    .requestPermission();
+
+            if (permission !== "granted") {
+
+                updateStatus(
+                    "Permission: " + permission
+                );
+
+                return;
+            }
+        }
+
+        window.addEventListener(
+            "deviceorientation",
+            orientation,
+            true
+        );
+
+        updateStatus(
+            "Permission granted. Waiting for sensor..."
+        );
+
+        enableButton.textContent =
+            "Gyroscope Enabled";
+
+        enableButton.disabled = true;
+
+    } catch (error) {
+
+        console.error(error);
+
+        updateStatus(
+            "ERROR: " + error.message
+        );
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
